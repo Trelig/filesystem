@@ -94,15 +94,13 @@ public class ClientUI extends JFrame{
     }
 
     public void serverShow(BufferedReader buf){
+        serverList.setText("");
         try{
-            buf.readLine();
+            for (int i = 0; i < buf.read(); i++){
+                serverList.append(buf.readLine() + "\n");
+            }
         }catch (Exception e){
             e.printStackTrace();
-        }
-
-        serverList.setText("");
-        for(String file : files){
-            serverList.append(file + "\n");
         }
     }
 
@@ -386,7 +384,9 @@ public class ClientUI extends JFrame{
             public void actionPerformed(ActionEvent e) {
                 try{
                     out.println("refresh");
-
+                    if (buf.readLine() == "refresh"){
+                        serverShow(buf);
+                    }
                 }catch (Exception e1){
                     e1.printStackTrace();
                 }

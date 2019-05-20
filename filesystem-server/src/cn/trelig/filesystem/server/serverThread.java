@@ -14,11 +14,11 @@ public class serverThread implements Runnable {
 
     public void refresh(PrintStream out, String systemPath){
         ArrayList<String> files = (new getInformation()).getFiles(systemPath);
-//        out.println("refresh");
-        out.println(files);
-//        for (String filename : files){
-//            out.println(filename);
-//        }
+        out.println("refresh");
+        out.println(files.size());
+        for (String filename : files){
+            out.println(filename);
+        }
     }
 
     String str = null;
@@ -45,6 +45,8 @@ public class serverThread implements Runnable {
                         break;
                     }
                     case "refresh":{
+                        System.out.println("收到refresh指令");
+                        System.out.println(systemPath);
                         refresh(out, systemPath);
                         break;
                     }
