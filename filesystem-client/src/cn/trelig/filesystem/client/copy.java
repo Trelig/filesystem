@@ -60,7 +60,7 @@ public class copy {
             temp.add("源文件夹不存在");
             return false;
         }
-        // 获得待复制的文件夹的名字，比如待复制的文件夹为"E://dir"则获取的名字为"dir"
+        // 获得待复制的文件夹的名字，比如待复制的文件夹为"E:\dir"则获取的名字为"dir"
         getInformation getInformation = new getInformation();
         String dirName = getInformation.getDirName(srcPath);
         // 目标文件夹的完整路径
@@ -98,6 +98,7 @@ public class copy {
     }
 
     //复制文件或文件夹
+    //srcPath 包含路径和文件名，destDir只有路径
     public ArrayList<String> copyGeneralFile(String srcPath, String destDir) {
 
         boolean flag = false;

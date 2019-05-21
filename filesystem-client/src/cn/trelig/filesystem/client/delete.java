@@ -11,7 +11,7 @@ public class delete {
         File file = new File(str);
         if (file.exists()) {
             //文件存在
-            String tString = file.getAbsolutePath() + "存在";
+            String tString = file.getAbsolutePath() + " 存在";
             temp.add(tString);
             file.delete();
             //System.out.println("该文件已删除。");

@@ -12,7 +12,7 @@ public class getInformation {
         return dir.substring(dir.lastIndexOf(File.separator) + 1);
     }
 
-    //获取文件列表
+    //获取文件列表，返回包含所有文件条目的字符串数组
     public ArrayList<String> getFiles(String path) {
         File file = new File(path);
         File[] tempList = file.listFiles();

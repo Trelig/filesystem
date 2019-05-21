@@ -15,10 +15,10 @@ public class delete {
             temp.add(tString);
             file.delete();
             //System.out.println("该文件已删除。");
-            temp.add("该文件已删除。");
+            temp.add("文件 " + fileName +  " 已删除。");
         } else {
             //文件不存在
-            temp.add("文件不存在。");
+            temp.add("文件 " + fileName +  " 不存在。");
         }
         return temp;
     }
@@ -31,7 +31,7 @@ public class delete {
         File dirfile = new File(str);
         if(!dirfile.isDirectory()) {
             flag = true;
-            temp.add("文件夹不存在！");
+            temp.add("文件夹 " + folderName +  " 不存在！");
         }
         File[] files = dirfile.listFiles();
         for (File file : files) {
@@ -52,10 +52,10 @@ public class delete {
         }
         flag = dirfile.delete();
         if(flag) {
-            temp.add("删除文件夹成功！");
+            temp.add("文件夹 " + folderName +  " 删除成功！");
         }
         else {
-            temp.add("删除文件夹失败！");
+            temp.add("文件夹 " + folderName +  " 删除失败！");
         }
         return temp;
     }

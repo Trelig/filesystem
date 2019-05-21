@@ -45,7 +45,7 @@ public class crypto {
             throw new RuntimeException( e);
         }
     }
-    //加密函数
+    //加密主函数
     private File Encrypt(File file) throws Exception
     {
         String temp_path = path;

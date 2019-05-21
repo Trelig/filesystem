@@ -1,10 +1,11 @@
 package cn.trelig.filesystem.server;
 
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class serverThread implements Runnable {
+public class serverThread implements Runnable {//服务器线程类，用于处理客户端的交互
     public final static int bytesize = 2048;
     private Socket client = null;
 
@@ -12,12 +13,14 @@ public class serverThread implements Runnable {
         this.client = client;
     }
 
-    public void refresh(PrintStream out, String systemPath){
+    public void refresh(PrintStream out, String systemPath){//服务器刷新功能，用于将所有文件信息逐条发送至客户端
         ArrayList<String> files = (new getInformation()).getFiles(systemPath);
         out.println("refresh");
         out.println(files.size());
+        //System.out.println(files.size());
         for (String filename : files){
             out.println(filename);
+            //System.out.println(filename);
         }
     }
 
@@ -27,7 +30,7 @@ public class serverThread implements Runnable {
         try {
             File directory = new File("");//设定为当前文件夹
             String systemPath = directory.getAbsolutePath();
-            (new create()).createFolder(systemPath, "\\serverFile");
+            (new create()).createFolder(systemPath, "\\serverFile");//程序运行时创建服务器专用文件夹
             systemPath += "\\serverFile";
             String srcPath = null;
             //获取Socket的输出流，用来向客户端发送数据
@@ -37,20 +40,21 @@ public class serverThread implements Runnable {
             boolean isLogout = false;
             while (!isLogout) {
                 //接收从客户端发送过来的数据
-                str = buf.readLine();
+                str = buf.readLine();//先读取与客户端约定的指令
                 switch (str){
                     case "logout":{
                         //out.println("logout");
-                        isLogout = true;
+                        isLogout = true;    //接收到注销指令，不再接收客户端消息
                         break;
                     }
                     case "refresh":{
                         System.out.println("收到refresh指令");
-                        System.out.println(systemPath);
+                        //System.out.println(systemPath);
                         refresh(out, systemPath);
                         break;
                     }
                     case "back":{
+                        System.out.println("收到back指令");
                         //获取当前父文件夹
                         String dir = (new getInformation()).getDirName(systemPath);
                         if (systemPath.length() > 3){
@@ -59,25 +63,28 @@ public class serverThread implements Runnable {
                         if (systemPath.length() < 3){
                             systemPath += "\\";
                         }
-                        refresh(out,systemPath);
+//                        refresh(out,systemPath);
                         out.println("当前路径为：" + systemPath);
                         break;
                     }
                     case "createFolder":{
+                        System.out.println("收到createFolder指令");
                         String name = buf.readLine();
                         String temp = (new create()).createFolder(systemPath + "\\",name);
-                        refresh(out, systemPath);
+//                        refresh(out, systemPath);
                         out.println(temp);
                         break;
                     }
                     case "createFile":{
+                        System.out.println("收到createFile指令");
                         String name = buf.readLine();
                         String temp = (new create()).createFile(systemPath + "\\", name);
-                        refresh(out, systemPath);
+//                        refresh(out, systemPath);
                         out.println(temp);
                         break;
                     }
                     case "getin":{
+                        System.out.println("收到getin指令");
                         String folderName = buf.readLine();
                         ArrayList<String> files = (new getInformation()).getFiles(systemPath);
                         if (files.contains(folderName)){
@@ -87,10 +94,11 @@ public class serverThread implements Runnable {
                         else {
                             out.println("文件夹 " + folderName + " 不存在。");
                         }
-                        refresh(out,systemPath);
+//                        refresh(out,systemPath);
                         break;
                     }
                     case "copy":{
+                        System.out.println("收到copy指令");
                         String name = buf.readLine();
                         ArrayList<String> files = (new getInformation()).getFiles(systemPath);
                         if (files.contains(name)){
@@ -103,10 +111,12 @@ public class serverThread implements Runnable {
                         break;
                     }
                     case "paste":{
+                        System.out.println("收到paste指令");
                         if (srcPath != null){
                             (new copy()).copyGeneralFile(srcPath, systemPath);
-                            out.println("已拷贝 " + srcPath);
-                            refresh(out, systemPath);
+                            out.println("已粘贴 " + srcPath);
+                            srcPath = null;
+//                            refresh(out, systemPath);
                         }
                         else{
                             out.println("未拷贝源文件。");
@@ -114,26 +124,30 @@ public class serverThread implements Runnable {
                         break;
                     }
                     case "delete":{
+                        System.out.println("收到delete指令");
                         ArrayList<String> temp = new ArrayList<String>();
                         String name = buf.readLine();
                         File delFile = new File(systemPath + "\\" + name);
                         delete delete = new delete();
                         if (delFile.isDirectory()){
                             temp  = delete.deleteFolder(systemPath + "\\", name);
+                            out.println(temp.size());
                             for (String t : temp){
                                 out.println(t);
                             }
                         }
                         else {
                             temp = delete.deleteFile(systemPath + "\\", name);
+                            out.println(temp.size());
                             for (String t : temp){
                                 out.println(t);
                             }
                         }
-                        refresh(out,systemPath);
+//                        refresh(out,systemPath);
                         break;
                     }
                     case "encrypt":{
+                        System.out.println("收到encrypt指令");
                         String name = buf.readLine();
                         String password = buf.readLine();
                         //如果不存在该文件
@@ -152,6 +166,7 @@ public class serverThread implements Runnable {
                         break;
                     }
                     case "decrypt":{
+                        System.out.println("收到decrypt指令");
                         String name = buf.readLine();
                         String password = buf.readLine();
                         //如果不存在该文件
@@ -170,30 +185,80 @@ public class serverThread implements Runnable {
                         break;
                     }
                     case "upload":{
+                        System.out.println("收到upload指令");
                         @SuppressWarnings("resource")
-                        PrintWriter temppw = new PrintWriter(new FileWriter(systemPath), true);
-                        String templine = null;
-                        while ((templine = buf.readLine()) != null) {
-                            if(templine.equals("#@#@Over@#@#")) {
-                                break;
+                        DataInputStream dataInput;
+                        FileOutputStream fileOutput;
+                        ServerSocket fileServer;
+                        Socket fileClient = null;
+                        try{
+                            fileServer = new ServerSocket(8899);
+                            fileClient = fileServer.accept();
+                            dataInput = new DataInputStream(fileClient.getInputStream());
+                            // 文件名和长度
+                            String fileName = dataInput.readUTF();
+                            long fileLength = dataInput.readLong();
+                            File file = new File(systemPath + "\\" + fileName);
+                            fileOutput = new FileOutputStream(file);
+
+                            byte[] bytes = new byte[bytesize];
+                            int length = 0;
+                            while ((length = dataInput.read(bytes,0,bytes.length)) != -1){
+                                fileOutput.write(bytes,0,length);
+                                fileOutput.flush();
                             }
-                            temppw.println(templine);
+                            System.out.println("======== 文件接收成功 [File Name：" + fileName + "] [Size：" + fileLength + "] ========");
+                            fileOutput.close();
+                            dataInput.close();
+                            fileServer.close();
+                            fileClient.close();
+                            out.println("uploadOK");
+                        }catch (Exception e){
+                            e.printStackTrace();
                         }
-                        out.println("上传完成。");
                         break;
                     }
                     case "download":{
+                        System.out.println("收到download指令");
                         String name = buf.readLine();
-                        @SuppressWarnings("resource")
-                        BufferedReader tempbf = new BufferedReader(new FileReader(systemPath + "\\" + name));
-                        OutputStream tempout = client.getOutputStream();
-                        PrintWriter temppw = new PrintWriter(tempout, true);
-                        String tempString = null;
-                        while ((tempString = tempbf.readLine()) != null) {
-                            temppw.println(tempString);
+                        File tempfile = new File(systemPath + "\\" + name);
+                        if (!tempfile.exists() || tempfile.isDirectory())//文件不存在或者选择的文件名是文件夹
+                            out.println("notExist");
+                        else
+                            out.println("exist");
+                        FileInputStream fileInput;
+                        DataOutputStream dataOutput;
+                        Socket fileClient;
+                        try {
+                            @SuppressWarnings("resource")
+                            File file = new File(systemPath + "\\" + name);
+                            fileClient = new Socket(client.getLocalAddress().getHostAddress(),8899);
+                            fileInput = new FileInputStream(file);
+                            dataOutput = new DataOutputStream(fileClient.getOutputStream());
+                            System.out.println("开始预处理要发送的文件...");
+                            //发送文件名和长度
+                            dataOutput.writeUTF(file.getName());
+                            dataOutput.flush();
+                            dataOutput.writeLong(file.length());
+                            dataOutput.flush();
+
+                            System.out.println("开始传输文件");
+                            byte[] bytes = new byte[bytesize];
+                            int length = 0;
+                            long progress = 0;
+                            while ((length = fileInput.read(bytes,0,bytes.length)) != -1){
+                                dataOutput.write(bytes,0,length);
+                                dataOutput.flush();
+                                progress += length;
+                                System.out.println("| " + (100*progress/file.length()) + "% |");
+                            }
+                            fileInput.close();
+                            dataOutput.close();
+                            fileClient.close();
+                            System.out.println("文件传输结束");
+                        }catch (Exception e){
+                            e.printStackTrace();
                         }
-                        temppw.println("#@#@Over@#@#");
-                        out.println("下载完成。");
                         break;
                     }
                     default:

@@ -45,7 +45,7 @@ public class copy {
             flag = true;
         } catch (IOException e) {
             //
-            System.out.println("Error!");
+            System.out.println("Error! ");
         }
         return flag;
     }

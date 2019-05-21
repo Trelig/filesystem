@@ -35,7 +35,7 @@ public class create {
             temp = "文件夹 " + folderName +" 已存在。";
         } else {
             //System.out.println("该文件夹不存在，创建该文件夹。");
-            temp = ("文件夹 " + folderName + " 不存在，创建该文件夹。");
+            temp = "文件夹 " + folderName + " 不存在，创建该文件夹。";
             dir.mkdirs();
         }
         return temp;

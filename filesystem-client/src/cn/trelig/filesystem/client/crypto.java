@@ -7,7 +7,7 @@ import javax.crypto.*;
 public class crypto {
     private Key key;
     String path;
-    //文件加密
+    //文件加密主函数
     public void Enc(String password,String path_File, String name_File)
     {
         path = path_File;
