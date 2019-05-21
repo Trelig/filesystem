@@ -81,8 +81,8 @@ public class ClientUI extends JFrame{
 
     //用于往输出框内输出内容
     void print(ArrayList<String> out){
-        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");//获取当前时间，在输出语句前加上时间戳
         for (String temp : out){
+            SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");//获取当前时间，在输出语句前加上时间戳
             output.append(df.format(new Date()) + ": " + temp + "\n");
         }
     }
@@ -584,9 +584,6 @@ public class ClientUI extends JFrame{
         uploadButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FileInputStream fileInput;
-                DataOutputStream dataOutput;
-                Socket fileClient;
                 ArrayList<String> something = new ArrayList<String>();
                 String name = JOptionPane.showInputDialog("请输入要上传的文件名:");
                 try{
@@ -594,47 +591,14 @@ public class ClientUI extends JFrame{
                     File file = new File(currentPath + "\\" + name);
                     if (file.exists() && !file.isDirectory()){
                         out.println("upload");
-                        fileClient = new Socket(ip,8899);//一个socket只能有一个传输流，因此传输文件需要新建一个socket，避免传输结束后关闭了消息传输流
-                        fileInput = new FileInputStream(file);
-                        dataOutput = new DataOutputStream(fileClient.getOutputStream());
-
-                        something.add("开始预处理要发送的文件...");
-                        //发送文件名和长度
-                        dataOutput.writeUTF(file.getName());
-                        dataOutput.flush();
-                        dataOutput.writeLong(file.length());
-                        dataOutput.flush();
-
-                        something.add("开始传输文件");
-                        print(something);
-                        something.clear();//为了及时显示传输状态
-                        byte[] bytes = new byte[bytesize];
-                        int length = 0;
-                        long progress = 0;
-                        while ((length = fileInput.read(bytes,0,bytes.length)) != -1){
-                            dataOutput.write(bytes,0,length);
-                            dataOutput.flush();
-                            progress += length;
-                            something.add("| " + (100*progress/file.length()) + "% |");
-                            print(something);
-                            something.clear();
-                        }
-                        fileInput.close();
-                        dataOutput.close();
-                        fileClient.close();         //文件传输结束后关闭文件传输socket和传输流
-                        if (buf.readLine().equals("uploadOK")){ //与服务器确认是否上传成功
-                            something.add("[Server]:文件上传成功！");
-                            serverRefresh();
-                        }
-                        else {
-                            something.add("[Server]:文件上传失败！");
-                        }
-
+                        new Thread(new uploadThread(ip, file, output, buf)).start();
+                        refresh();
                     }
                     else {
                         something.add("文件 " + name +" 不存在。");
                     }
                     print(something);
+                    serverRefresh();
                 }catch (Exception e1){
                     e1.printStackTrace();
                 }
@@ -659,36 +623,8 @@ public class ClientUI extends JFrame{
                     e1.printStackTrace();
                 }
                 if (isExist){           //文件存在，则把当前客户端当做文件传输的服务端用于接收文件
-                    @SuppressWarnings("resource")
-                    DataInputStream dataInput;
-                    FileOutputStream fileOutput;
-                    ServerSocket fileServer;
-                    Socket fileClient = null;
-                    try{
-                        fileServer = new ServerSocket(8899);
-                        fileClient = fileServer.accept();
-                        dataInput = new DataInputStream(fileClient.getInputStream());
-                        // 文件名和长度
-                        String fileName = dataInput.readUTF();
-                        long fileLength = dataInput.readLong();
-                        File file = new File(currentPath + "\\" + fileName);    //文件下载到当前路径
-                        fileOutput = new FileOutputStream(file);
-
-                        byte[] bytes = new byte[bytesize];
-                        int length = 0;
-                        while ((length = dataInput.read(bytes,0,bytes.length)) != -1){
-                            fileOutput.write(bytes,0,length);
-                            fileOutput.flush();
-                        }
-                        something.add("======== 文件接收成功 [File Name：" + fileName + "] [Size：" + fileLength + "] ========");
-                        fileOutput.close();
-                        dataInput.close();
-                        fileServer.close();
-                        fileClient.close();
-                        refresh();
-                    }catch (Exception e1){
-                        e1.printStackTrace();
-                    }
+                    new Thread(new downloadThread(currentPath, output)).start();
+                    refresh();
                 }
                 print(something);
 
@@ -715,6 +651,6 @@ public class ClientUI extends JFrame{
         // TODO: place custom component creation code here
         output = new JTextArea();
         Scroll = new JScrollPane(output);//对输出框进行声明并把输出框和滚动条绑定
-
+        output.selectAll();
     }
 }

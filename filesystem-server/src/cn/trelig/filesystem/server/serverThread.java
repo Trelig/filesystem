@@ -186,36 +186,7 @@ public class serverThread implements Runnable {//服务器线程类，用于处�
                     }
                     case "upload":{
                         System.out.println("收到upload指令");
-                        @SuppressWarnings("resource")
-                        DataInputStream dataInput;
-                        FileOutputStream fileOutput;
-                        ServerSocket fileServer;
-                        Socket fileClient = null;
-                        try{
-                            fileServer = new ServerSocket(8899);
-                            fileClient = fileServer.accept();
-                            dataInput = new DataInputStream(fileClient.getInputStream());
-                            // 文件名和长度
-                            String fileName = dataInput.readUTF();
-                            long fileLength = dataInput.readLong();
-                            File file = new File(systemPath + "\\" + fileName);
-                            fileOutput = new FileOutputStream(file);
-
-                            byte[] bytes = new byte[bytesize];
-                            int length = 0;
-                            while ((length = dataInput.read(bytes,0,bytes.length)) != -1){
-                                fileOutput.write(bytes,0,length);
-                                fileOutput.flush();
-                            }
-                            System.out.println("======== 文件接收成功 [File Name：" + fileName + "] [Size：" + fileLength + "] ========");
-                            fileOutput.close();
-                            dataInput.close();
-                            fileServer.close();
-                            fileClient.close();
-                            out.println("uploadOK");
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
+                        new Thread(new recieveFileThread(systemPath, out)).start();
                         break;
                     }
                     case "download":{
@@ -224,40 +195,9 @@ public class serverThread implements Runnable {//服务器线程类，用于处�
                         File tempfile = new File(systemPath + "\\" + name);
                         if (!tempfile.exists() || tempfile.isDirectory())//文件不存在或者选择的文件名是文件夹
                             out.println("notExist");
-                        else
+                        else{
                             out.println("exist");
-                        FileInputStream fileInput;
-                        DataOutputStream dataOutput;
-                        Socket fileClient;
-                        try {
-                            @SuppressWarnings("resource")
-                            File file = new File(systemPath + "\\" + name);
-                            fileClient = new Socket(client.getLocalAddress().getHostAddress(),8899);
-                            fileInput = new FileInputStream(file);
-                            dataOutput = new DataOutputStream(fileClient.getOutputStream());
-                            System.out.println("开始预处理要发送的文件...");
-                            //发送文件名和长度
-                            dataOutput.writeUTF(file.getName());
-                            dataOutput.flush();
-                            dataOutput.writeLong(file.length());
-                            dataOutput.flush();
-
-                            System.out.println("开始传输文件");
-                            byte[] bytes = new byte[bytesize];
-                            int length = 0;
-                            long progress = 0;
-                            while ((length = fileInput.read(bytes,0,bytes.length)) != -1){
-                                dataOutput.write(bytes,0,length);
-                                dataOutput.flush();
-                                progress += length;
-                                System.out.println("| " + (100*progress/file.length()) + "% |");
-                            }
-                            fileInput.close();
-                            dataOutput.close();
-                            fileClient.close();
-                            System.out.println("文件传输结束");
-                        }catch (Exception e){
-                            e.printStackTrace();
+                            new Thread(new sendFileThread(systemPath + "\\" + name, client.getLocalAddress().getHostAddress())).start();
                         }
                         break;
                     }

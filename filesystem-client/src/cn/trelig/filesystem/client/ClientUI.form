@@ -407,6 +407,7 @@
               <editable value="false"/>
               <lineWrap value="false"/>
               <rows value="5"/>
+              <text value=""/>
               <wrapStyleWord value="false"/>
             </properties>
           </component>
