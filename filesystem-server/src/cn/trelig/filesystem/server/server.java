@@ -33,6 +33,7 @@ public class server {
                 }
                 else{
                     out.println("bad");
+                    client.close();
                     System.out.println("客户端登录失败！");
                 }
             }
